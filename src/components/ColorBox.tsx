@@ -1,7 +1,7 @@
 import { Copy, Check } from 'lucide-react';
 import { Button } from './ui/button';
 import { useState } from 'react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { motion } from 'motion/react';
 
 interface ColorBoxProps {

@@ -2,7 +2,7 @@ import { Download, Camera, Check } from 'lucide-react';
 import { Button } from './ui/button';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 
 export function SaveBox() {

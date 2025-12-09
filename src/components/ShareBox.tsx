@@ -1,7 +1,7 @@
 import { Share2, Link2, Check, Twitter, Facebook, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 
 interface ShareBoxProps {
