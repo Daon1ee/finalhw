@@ -18,56 +18,56 @@ const moodMusic: Record<string, {
     genres: ['Pop', 'Dance', 'K-pop'], 
     color: 'from-yellow-400 to-orange-400', 
     emoji: '🎉',
-    youtubeId: 'jfKfPfyJRdk', // Happy upbeat music
+    youtubeId: 'qC6YkDDmwPM', // Happy upbeat music (updated)
     title: 'Happy Vibes'
   },
   calm: { 
     genres: ['Lo-fi', 'Acoustic', 'Classical'], 
     color: 'from-blue-300 to-cyan-300', 
     emoji: '🎧',
-    youtubeId: 'jfKfPfyJRdk', // Lofi hip hop
+    youtubeId: '6H-PLF2CR18', // Lofi hip hop
     title: 'Calm Beats'
   },
   romantic: { 
     genres: ['R&B', 'Jazz', 'Ballad'], 
     color: 'from-pink-400 to-rose-400', 
     emoji: '💕',
-    youtubeId: 'neV3EPgvZ3g', // Romantic jazz
+    youtubeId: 'PKGvyduUSsY', // Romantic jazz
     title: 'Romantic Jazz'
   },
   energetic: { 
     genres: ['EDM', 'Rock', 'Hip-hop'], 
     color: 'from-purple-500 to-pink-500', 
     emoji: '⚡',
-    youtubeId: '6Dh-RL__uN4', // Energetic workout music
+    youtubeId: '3ssL8vx7Xhg', // Energetic workout music
     title: 'Energy Boost'
   },
   cozy: { 
     genres: ['Indie', 'Folk', 'Soul'], 
     color: 'from-amber-600 to-orange-600', 
     emoji: '☕',
-    youtubeId: 'rUxyKA_-grg', // Cozy indie folk
+    youtubeId: 'rt1mRnRp79A', // Cozy indie folk
     title: 'Cozy Corner'
   },
   dreamy: { 
     genres: ['Ambient', 'Chillwave', 'Dream Pop'], 
     color: 'from-indigo-400 to-purple-400', 
     emoji: '✨',
-    youtubeId: 'DWcJFNfaw9c', // Dreamy ambient
+    youtubeId: 'UMhOGEo8O5A', // Dreamy ambient
     title: 'Dreamy Soundscapes'
   },
   vibrant: { 
     genres: ['Funk', 'Disco', 'Electronic'], 
     color: 'from-cyan-400 to-blue-500', 
     emoji: '🎨',
-    youtubeId: 'fWRISvgAygU', // Funky disco
+    youtubeId: '8oHJGD63R74', // Funky disco
     title: 'Vibrant Groove'
   },
   peaceful: { 
     genres: ['New Age', 'Meditation', 'Piano'], 
     color: 'from-pink-300 to-purple-300', 
     emoji: '🕊️',
-    youtubeId: '1ZYbU82GVz4', // Peaceful meditation
+    youtubeId: 'QGEZbOm-P44', // Peaceful meditation
     title: 'Peaceful Mind'
   },
 };
@@ -78,6 +78,7 @@ export function MusicMoodBox({ selectedMood }: MusicMoodBoxProps) {
   const musicData = selectedMood ? moodMusic[selectedMood] : null;
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [volume, setVolume] = useState<number>(100); // 0-100
   const playerRef = useRef<any>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -96,19 +97,34 @@ export function MusicMoodBox({ selectedMood }: MusicMoodBoxProps) {
     
     if (isPlaying) {
       // 일시정지
-      iframeRef.current.contentWindow?.postMessage(
-        '{"event":"command","func":"pauseVideo","args":""}',
-        '*'
-      );
+      postYouTubeCommand('pauseVideo');
     } else {
       // 재생
-      iframeRef.current.contentWindow?.postMessage(
-        '{"event":"command","func":"playVideo","args":""}',
-        '*'
-      );
+      postYouTubeCommand('playVideo');
     }
     setIsPlaying(!isPlaying);
   };
+
+  // Helper to send commands to YouTube iframe player
+  const postYouTubeCommand = (command: string, args: any = []) => {
+    const iframe = iframeRef.current;
+    if (!iframe || !iframe.contentWindow) return;
+    try {
+      iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: command, args }), '*');
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  // When player appears or volume changes, send setVolume
+  useEffect(() => {
+    if (!iframeRef.current) return;
+    // Delay briefly to give player a chance to initialize
+    const t = setTimeout(() => {
+      postYouTubeCommand('setVolume', [Math.round(volume)]);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [showPlayer, volume]);
   
   return (
     <motion.div
@@ -188,10 +204,11 @@ export function MusicMoodBox({ selectedMood }: MusicMoodBoxProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                <Button
-                  onClick={togglePlay}
-                  className="bg-white/90 hover:bg-white text-slate-700 rounded-full h-12 w-12 p-0 shadow-lg"
-                >
+                <div className="flex items-center gap-3 justify-center">
+                  <Button
+                    onClick={togglePlay}
+                    className="bg-white/90 hover:bg-white text-slate-700 rounded-full h-12 w-12 p-0 shadow-lg"
+                  >
                   <AnimatePresence mode="wait">
                     {isPlaying ? (
                       <motion.div
@@ -215,7 +232,41 @@ export function MusicMoodBox({ selectedMood }: MusicMoodBoxProps) {
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </Button>
+                  </Button>
+
+                  {/* Volume control */}
+                  <div className="flex items-center gap-2 px-1 py-0 rounded-full">
+                    <Volume2 className="w-4 h-4 text-white" />
+                    <div className="transform -translate-y-3">
+                      <style>{`
+                        .mm-range { appearance: none; height: 6px; border-radius: 999px; background: transparent; }
+                        .mm-range:focus { outline: none; }
+                        /* WebKit */
+                        .mm-range::-webkit-slider-runnable-track {
+                          height: 6px; border-radius: 999px;
+                          background: linear-gradient(90deg, white var(--vol), rgba(0,0,0,0.1) var(--vol));
+                        }
+                        .mm-range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 999px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-top: -4px; }
+                        /* Firefox */
+                        .mm-range::-moz-range-track { height:6px; border-radius:999px; background: linear-gradient(90deg, white var(--vol), rgba(0,0,0,0.1) var(--vol)); }
+                        .mm-range::-moz-range-thumb { width:14px; height:14px; border-radius:999px; background:white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+                      `}</style>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={volume}
+                        onChange={(e) => setVolume(Number(e.target.value))}
+                        className="w-32 mm-range"
+                        aria-label="Volume"
+                        style={{
+                          // set CSS var in percent for gradient stops
+                          ['--vol' as any]: `${volume}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             </div>
           ) : (

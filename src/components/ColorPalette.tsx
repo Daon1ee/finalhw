@@ -1,6 +1,6 @@
 import { Copy, Check } from 'lucide-react';
 import { Button } from './ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -21,8 +21,35 @@ const moodPalettes: Record<string, string[]> = {
 
 export function ColorPalette({ mood }: ColorPaletteProps) {
   const [copiedColor, setCopiedColor] = useState<string | null>(null);
-  
-  const palette = mood ? moodPalettes[mood] : ['#E5E7EB', '#D1D5DB', '#9CA3AF', '#6B7280', '#4B5563'];
+  const [palette, setPalette] = useState<string[]>(
+    mood ? moodPalettes[mood] : ['#E5E7EB', '#D1D5DB', '#9CA3AF', '#6B7280', '#4B5563']
+  );
+  const [loading, setLoading] = useState(false);
+
+  // lazy import the helper to avoid adding runtime error when no network
+  useEffect(() => {
+    let mounted = true;
+    async function loadPalette() {
+      if (!mood) {
+        setPalette(['#E5E7EB', '#D1D5DB', '#9CA3AF', '#6B7280', '#4B5563']);
+        return;
+      }
+      setLoading(true);
+      try {
+        const mod = await import('../lib/colorApi');
+        const fetched = await mod.fetchPaletteForMood(mood, moodPalettes[mood] || palette);
+        if (mounted && Array.isArray(fetched) && fetched.length > 0) setPalette(fetched);
+      } catch (err) {
+        // keep fallback palette
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    loadPalette();
+    return () => {
+      mounted = false;
+    };
+  }, [mood]);
 
   const copyToClipboard = (color: string) => {
     navigator.clipboard.writeText(color);
@@ -56,9 +83,9 @@ export function ColorPalette({ mood }: ColorPaletteProps) {
         </AnimatePresence>
       </div>
       
-      <div className="flex-1 flex flex-col gap-3">
+    <div className="flex-1 flex flex-col gap-3">
         <AnimatePresence mode="wait">
-          {palette.map((color, index) => (
+      {palette.map((color, index) => (
             <motion.div
               key={`${mood}-${color}-${index}`}
               className="flex items-center gap-3 group"
@@ -110,6 +137,11 @@ export function ColorPalette({ mood }: ColorPaletteProps) {
         </AnimatePresence>
       </div>
       
+      {loading && (
+        <motion.p className="text-center text-slate-400 text-sm mt-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          색상 팔레트를 불러오는 중...
+        </motion.p>
+      )}
       {!mood && (
         <motion.p 
           className="text-center text-slate-400 text-sm mt-4"
