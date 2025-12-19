@@ -1,4 +1,7 @@
 # 🌈 Mood-based Color Palette App
+This application converts a user’s mood into a color palette, image, short journal, and ambient sound.
+All elements are arranged in a Bento-style grid layout, allowing users to view and save their emotional state in a single, organized screen.
+
 
 ## 1. Technology Stack
 ### Frontend
