@@ -91,6 +91,6 @@ The application transforms emotion -> data -> visual + audio multimodal experien
 - The Bento-style modular layout organizes each content type into distinct, meaningful blocks
 - Visual weight is controlled using size, spacing, contrast, and alignment, ensuring users can easily understand importance and flow
 
-#### Accessibility
+### Accessibility
 - Color palettes influence UI accenting, but accessibility contrast standards are maintained to prevent readability issues
 - Consistent typography and section labels reinforce clarity, making it easy to distinguish between data types and interactive components
